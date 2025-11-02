@@ -1,13 +1,13 @@
 {
-    "name": "hw-go",
+    "name": "mec-xapp",
     "version": "1.0.0",
     "containers": [
         {
-            "name": "hw-go",
+            "name": "mec-xapp",
             "image": {
                 "registry": "127.0.0.0:5000",
-                "name": "hw-go",
-                "tag": "latest"
+                "name": "mec-xapp",
+                "tag": "0.0.4"
             }
         }
     ],
@@ -31,19 +31,19 @@
         "ports": [
             {
                 "name": "http",
-                "container": "hw-go",
+                "container": "mec-xapp",
                 "port": 8080,
                 "description": "http service"
             },
             {
                 "name": "rmrroute",
-                "container": "hw-go",
+                "container": "mec-xapp",
                 "port": 4561,
-                "description": "rmr route port for hw-go xapp"
+                "description": "rmr route port for mec-xapp"
             },
             {
                 "name": "rmrdata",
-                "container": "hw-go",
+                "container": "mec-xapp",
                 "port": 4560,
                 "rxMessages": ["RIC_SUB_RESP", "RIC_SUB_FAILURE", "RIC_SUB_DEL_RESP", "RIC_INDICATION"],
                 "txMessages": ["RIC_SUB_REQ", "RIC_SUB_DEL_REQ", "RIC_SGNB_ADDITION_REQ", "RIC_SGNB_ADDITION_ACK"],
@@ -52,7 +52,7 @@
                         {"name":"TESTNAME2","id":55556}
                 ],
                 "policies": [1],
-                "description": "rmr data port for hw-go"
+                "description": "rmr data port for mec-xapp"
             }
         ]
     },

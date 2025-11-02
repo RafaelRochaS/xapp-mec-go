@@ -1,4 +1,4 @@
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 as build-mec-app
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 AS build-mec-app
 
 RUN apt update && apt install -y iputils-ping net-tools curl sudo ca-certificates
 
@@ -12,7 +12,7 @@ WORKDIR "/go/src/mec-app"
 
 ENV GO111MODULE=on GO_ENABLED=0 GOOS=linux
 
-RUN go build -a -installsuffix cgo -o mec-app mec.go
+RUN go build -a -installsuffix cgo -o mec-app ./cmd
 
 
 FROM ubuntu:18.04
@@ -22,7 +22,7 @@ ENV RMR_SEED_RT=config/uta_rtg.rt
 
 RUN mkdir /config
 
-COPY --from=build-hw-go /go/src/mec-app/mec-app /
+COPY --from=build-mec-app /go/src/mec-app/mec-app /
 COPY --from=build-mec-app /go/src/mec-app/config/* /config/
 COPY --from=build-mec-app /usr/local/lib /usr/local/lib
 

@@ -29,7 +29,7 @@ var (
 	subscriptionId       = ""
 	hPort                = int64(8080)
 	rPort                = int64(4560)
-	clientEndpoint       = clientmodel.SubscriptionParamsClientEndpoint{Host: "service-ricxapp-hw-go-rmr.ricxapp", HTTPPort: &hPort, RMRPort: &rPort}
+	clientEndpoint       = clientmodel.SubscriptionParamsClientEndpoint{Host: "service-ricxapp-mec-xapp-rmr.ricxapp", HTTPPort: &hPort, RMRPort: &rPort}
 )
 
 func (e *MECApp) sendPolicyQuery() {
@@ -199,7 +199,7 @@ func (e *MECApp) Consume(msg *xapp.RMRParams) (err error) {
 func (e *MECApp) Run() {
 
 	// set MDC
-	xapp.Logger.SetMdc("MECApp", "0.0.1")
+	xapp.Logger.SetMdc("MECApp", "0.0.4")
 
 	// set config change listener
 	xapp.AddConfigChangeListener(e.ConfigChangeHandler)
@@ -225,7 +225,10 @@ func main() {
 	}
 
 	mec := MECApp{
-		stats: xapp.Metric.RegisterCounterGroup(metrics, "mec-app"), // register counter
+		stats: xapp.Metric.RegisterCounterGroup(metrics, "mec_app"), // register counter
 	}
+
+	RegisterRoutes()
+
 	mec.Run()
 }
