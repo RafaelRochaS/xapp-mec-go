@@ -110,7 +110,7 @@ func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	jobId := r.URL.Query().Get("jobId")
 
 	if jobId == "" {
-		w.WriteHeader(http.StatusNoContent)
+		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte("Missing jobId parameter"))
 		return
 	}

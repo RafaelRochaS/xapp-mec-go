@@ -76,6 +76,6 @@
            }
     },
     "db" : {
-            "waitForSdl": false
+            "waitForSdl": true
     }
 }
