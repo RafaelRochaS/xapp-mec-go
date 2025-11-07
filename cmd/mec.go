@@ -2,10 +2,14 @@ package main
 
 import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
+	"github.com/RafaelRochaS/xapp-mec-go/cmd/utils"
+	"k8s.io/client-go/kubernetes"
 )
 
 type MECApp struct {
-	stats map[string]xapp.Counter
+	stats               map[string]xapp.Counter
+	inClusterClientSet  *kubernetes.Clientset
+	outClusterClientSet *kubernetes.Clientset
 }
 
 func main() {
@@ -16,8 +20,24 @@ func main() {
 		},
 	}
 
+	err, inClusterClient := utils.GetK8sClient(utils.InCluster)
+
+	if err != nil {
+		xapp.Logger.Error("Error in getting in cluster k8s client: %v", err)
+		return
+	}
+
+	err, outClusterClient := utils.GetK8sClient(utils.OutCluster)
+
+	if err != nil {
+		xapp.Logger.Error("Error in getting out of cluster k8s client: %v", err)
+		return
+	}
+
 	mec := MECApp{
-		stats: xapp.Metric.RegisterCounterGroup(metrics, "mec_app"),
+		stats:               xapp.Metric.RegisterCounterGroup(metrics, "mec_app"),
+		inClusterClientSet:  inClusterClient,
+		outClusterClientSet: outClusterClient,
 	}
 
 	RegisterRoutes()
