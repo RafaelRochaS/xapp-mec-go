@@ -1,4 +1,4 @@
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 AS build-mec-app
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu22-c-go:1.0.0 AS build-mec-app
 
 RUN apt update && apt install -y iputils-ping net-tools curl sudo ca-certificates
 
@@ -15,7 +15,7 @@ ENV GO111MODULE=on GO_ENABLED=0 GOOS=linux
 RUN go build -a -installsuffix cgo -o mec-app ./cmd
 
 
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 ENV CFG_FILE=config/config-file.json
 ENV RMR_SEED_RT=config/uta_rtg.rt
