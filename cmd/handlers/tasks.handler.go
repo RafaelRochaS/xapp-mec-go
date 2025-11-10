@@ -11,11 +11,29 @@ import (
 )
 
 type TaskHandler struct {
-	sdlClient *xapp.SDLStorage
+	sdlClient   *xapp.SDLStorage
+	edgeClient  *utils.K8sClient
+	cloudClient *utils.K8sClient
 }
 
 func NewTaskHandler() *TaskHandler {
-	return &TaskHandler{sdlClient: xapp.NewSdlStorage()}
+	inClusterClient, err := utils.GetK8sClient(utils.InCluster)
+
+	if err != nil {
+		xapp.Logger.Error("Error in getting in cluster k8s client: %v", err)
+		panic(err)
+	}
+
+	outClusterClient, err := utils.GetK8sClient(utils.OutCluster)
+
+	if err != nil {
+		xapp.Logger.Error("Error in getting out of cluster k8s client: %v", err)
+		panic(err)
+	}
+	return &TaskHandler{
+		sdlClient:   xapp.NewSdlStorage(),
+		edgeClient:  inClusterClient,
+		cloudClient: outClusterClient}
 }
 
 func (t *TaskHandler) RegisterTask(w http.ResponseWriter, r *http.Request) {
@@ -99,8 +117,17 @@ func (t *TaskHandler) StartTask(w http.ResponseWriter, r *http.Request) {
 	xapp.Logger.Info("StartTaskHandler handler")
 	xapp.Logger.Debug("Request body: %s", r.Body)
 
+	err := HandleOffload(t.edgeClient, t.cloudClient, r.Body)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("Failed to start task:"))
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("[WIP] Task started"))
+	_, _ = w.Write([]byte("Task started"))
 }
 
 func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {

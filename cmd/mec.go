@@ -2,13 +2,10 @@ package main
 
 import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
-	"github.com/RafaelRochaS/xapp-mec-go/cmd/utils"
 )
 
 type MECApp struct {
-	stats               map[string]xapp.Counter
-	inClusterClientSet  *utils.K8sClient
-	outClusterClientSet *utils.K8sClient
+	Stats map[string]xapp.Counter
 }
 
 func main() {
@@ -19,25 +16,8 @@ func main() {
 		},
 	}
 
-	inClusterClient, err := utils.GetK8sClient(utils.InCluster)
-
-	if err != nil {
-		xapp.Logger.Error("Error in getting in cluster k8s client: %v", err)
-		return
-	}
-
-	outClusterClient, err := utils.GetK8sClient(utils.OutCluster)
-
-	if err != nil {
-		xapp.Logger.Error("Error in getting out of cluster k8s client: %v", err)
-		return
-	}
-
 	mec := MECApp{
-		stats:               xapp.Metric.RegisterCounterGroup(metrics, "mec_app"),
-		inClusterClientSet:  inClusterClient,
-		outClusterClientSet: outClusterClient,
-	}
+		Stats: xapp.Metric.RegisterCounterGroup(metrics, "mec_app")}
 
 	RegisterRoutes()
 
@@ -64,7 +44,7 @@ func (e *MECApp) xAppStartCB(d interface{}) {
 
 func (e *MECApp) handleRICIndication(ranName string, r *xapp.RMRParams) {
 	xapp.Logger.Info("handleRICIndication", ranName, "\tparams: ", *r)
-	e.stats["RICIndicationRx"].Inc()
+	e.Stats["RICIndicationRx"].Inc()
 }
 
 func (e *MECApp) Consume(msg *xapp.RMRParams) (err error) {

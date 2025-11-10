@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"context"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -9,8 +13,8 @@ import (
 )
 
 type K8sClient struct {
-	clientSet *kubernetes.Clientset
-	metrics   *metrics.Clientset
+	ClientSet *kubernetes.Clientset
+	Metrics   *metrics.Clientset
 }
 
 type K8sClientType int
@@ -50,7 +54,7 @@ func GetK8sClient(clientType K8sClientType) (*K8sClient, error) {
 
 	xapp.Logger.Info("Got k8s client set:", clientSet)
 
-	return &K8sClient{clientSet: clientSet, metrics: metricsClient}, err
+	return &K8sClient{ClientSet: clientSet, Metrics: metricsClient}, err
 }
 
 func getInClusterConfig() (*rest.Config, error) {
@@ -63,4 +67,24 @@ func getOutClusterConfig() (*rest.Config, error) {
 
 func getMetricsClient(config *rest.Config) (*metrics.Clientset, error) {
 	return metrics.NewForConfig(config)
+}
+
+func GetNodesResources(m *metrics.Clientset, ctx context.Context) ([]v1.ResourceList, error) {
+	nodeList, err := m.MetricsV1beta1().NodeMetricses().List(ctx, metav1.ListOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	resources := make([]v1.ResourceList, len(nodeList.Items))
+
+	for _, node := range nodeList.Items {
+		resources = append(resources, node.Usage)
+	}
+
+	return resources, nil
+}
+
+func OffloadTask(c *kubernetes.Clientset, task interface{}) error {
+	return nil
 }
