@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
+	"github.com/RafaelRochaS/xapp-mec-go/cmd/models"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -85,6 +86,6 @@ func GetNodesResources(m *metrics.Clientset, ctx context.Context) ([]v1.Resource
 	return resources, nil
 }
 
-func OffloadTask(c *kubernetes.Clientset, task interface{}) error {
+func OffloadTask(c *kubernetes.Clientset, task models.Task) error {
 	return nil
 }

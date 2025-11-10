@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
+	"github.com/RafaelRochaS/xapp-mec-go/cmd/models"
 	"github.com/RafaelRochaS/xapp-mec-go/cmd/utils"
 	"golang.org/x/net/context"
 )
 
-func HandleOffload(edgeClient, cloudClient *utils.K8sClient, task interface{}) error {
+func HandleOffload(edgeClient, cloudClient *utils.K8sClient, task models.Task) error {
+	xapp.Logger.Info("Handling offload request")
 	edgeMetrics, err := utils.GetNodesResources(edgeClient.Metrics, context.TODO())
 
 	if err != nil {
