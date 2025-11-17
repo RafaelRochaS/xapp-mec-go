@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"github.com/RafaelRochaS/xapp-mec-go/cmd/models"
@@ -67,7 +70,7 @@ func (t *TaskHandler) RegisterTask(w http.ResponseWriter, r *http.Request) {
 
 	xapp.Logger.Debug("Serialized task: %s", string(serializedTask))
 
-	err = t.sdlClient.Store(utils.TaskNamespace, jobId, serializedTask)
+	err = t.sdlClient.Store(utils.TaskNamespace, jobId, string(serializedTask))
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -77,9 +80,10 @@ func (t *TaskHandler) RegisterTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	registered := fmt.Sprintf("{ jobId: %s }", jobId)
+
 	w.WriteHeader(http.StatusCreated)
-	_, _ = w.Write([]byte("Registered job:"))
-	_, _ = w.Write([]byte(jobId))
+	_, _ = w.Write([]byte(registered))
 
 	return
 }
@@ -88,7 +92,8 @@ func (t *TaskHandler) RetrieveTask(w http.ResponseWriter, r *http.Request) {
 	xapp.Logger.Info("RetrieveTaskHandler handler")
 	xapp.Logger.Debug("Request body: %s", r.Body)
 
-	jobId := r.URL.Query().Get("jobId")
+	path := strings.Split(r.URL.Path, "/")
+	jobId := path[len(path)-1]
 
 	if jobId == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -96,36 +101,33 @@ func (t *TaskHandler) RetrieveTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsedJobId, err := uuid.Parse(jobId)
+	task, err := t.retrieveTask(jobId)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("Invalid jobId parameter:"))
+		_, _ = w.Write([]byte("Failed to retrieve task:"))
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
-	value, err := t.sdlClient.Read(utils.TaskNamespace, parsedJobId.String())
-
-	task := value[jobId].([]byte)
+	marshalledTask, err := json.Marshal(task)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("Failed to retrieve task:"))
 		_, _ = w.Write([]byte(err.Error()))
-
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write([]byte("Retrieved task:"))
-	_, _ = w.Write(task)
+	_, _ = w.Write(marshalledTask)
 }
 
 func (t *TaskHandler) StartTask(w http.ResponseWriter, r *http.Request) {
 	xapp.Logger.Info("StartTaskHandler handler")
-	xapp.Logger.Debug("Request body: %s", r.Body)
+	xapp.Logger.Debug("Request body: ", r.Body)
 
 	var taskRequest models.StartTaskRequest
 	err := json.NewDecoder(r.Body).Decode(&taskRequest)
@@ -138,25 +140,17 @@ func (t *TaskHandler) StartTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	value, err := t.sdlClient.Read(utils.TaskNamespace, taskRequest.Id)
-
-	jsonTask := value[taskRequest.Id].([]byte)
+	parsedTask, err := t.retrieveTask(taskRequest.Id)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte("Failed to retrieve task:"))
+		_, _ = w.Write([]byte("Failed to parse task: "))
 		_, _ = w.Write([]byte(err.Error()))
+
+		return
 	}
 
-	var task models.Task
-
-	if err = json.Unmarshal(jsonTask, &task); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte("Failed to parse task:"))
-		_, _ = w.Write([]byte(err.Error()))
-	}
-
-	err = HandleOffload(t.edgeClient, t.cloudClient, task)
+	err = HandleOffload(t.edgeClient, t.cloudClient, parsedTask)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -200,4 +194,39 @@ func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (t *TaskHandler) retrieveTask(id string) (models.Task, error) {
+	xapp.Logger.Debug("retrieveTask handler :: id: ", id)
+	parsedId, err := uuid.Parse(id)
+
+	if err != nil {
+		return models.Task{}, err
+	}
+
+	xapp.Logger.Debug("retrieveTask handler :: parsedId: ", id)
+
+	value, err := t.sdlClient.Read(utils.TaskNamespace, parsedId.String())
+
+	if err != nil {
+		return models.Task{}, err
+	}
+
+	xapp.Logger.Debug("Read value: %+v", value)
+
+	task, ok := value[id].(string)
+	xapp.Logger.Debug("Got task: %+v", task)
+
+	if !ok {
+		return models.Task{}, errors.New("task is not string")
+	}
+
+	var parsedTask models.Task
+	err = json.Unmarshal([]byte(task), &parsedTask)
+
+	if err != nil {
+		return models.Task{}, err
+	}
+
+	return parsedTask, nil
 }

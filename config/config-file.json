@@ -7,7 +7,7 @@
             "image": {
                 "registry": "127.0.0.0:5000",
                 "name": "mec-xapp",
-                "tag": "0.0.7"
+                "tag": "0.0.15"
             }
         }
     ],
@@ -63,10 +63,13 @@
     },
     "controls": {
            "logger": {
-                   "level": 3
+                   "level": 4
            }
     },
     "db" : {
             "waitForSdl": true
+    },
+    "offload": {
+      "threshold": 85
     }
 }
