@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -150,7 +151,7 @@ func (t *TaskHandler) StartTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = HandleOffload(t.edgeClient, t.cloudClient, parsedTask)
+	err = HandleOffload(t.edgeClient, t.cloudClient, parsedTask, context.TODO())
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

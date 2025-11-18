@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
@@ -88,6 +89,28 @@ func GetNodesResources(m *metrics.Clientset, ctx context.Context) (*[]v1.Resourc
 	return &resources, nil
 }
 
-func OffloadTask(c *kubernetes.Clientset, task models.Task) error {
-	return nil
+func OffloadTask(c *kubernetes.Clientset, task models.Task, ctx context.Context) error {
+	pod := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: task.Id,
+			Labels: map[string]string{
+				"offload":  "true",
+				"deviceId": task.DeviceId,
+			},
+		},
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Name:  fmt.Sprintf("Offload: %s-%s", task.DeviceId, task.Id),
+					Image: fmt.Sprintf("%s/%s", xapp.Config.GetString("offload.repository"), task.Image),
+				},
+			},
+		},
+	}
+
+	xapp.Logger.Info("Offloading task: ", task.Id)
+
+	_, err := c.CoreV1().Pods(xapp.Config.GetString("offload.namespace")).Create(ctx, pod, metav1.CreateOptions{})
+
+	return err
 }

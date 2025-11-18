@@ -70,6 +70,8 @@
             "waitForSdl": true
     },
     "offload": {
-      "threshold": 85
+      "threshold": 85,
+      "repository": "hub.docker.com",
+      "namespace": "mec"
     }
 }
