@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"log"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"github.com/RafaelRochaS/xapp-mec-go/cmd/models"
@@ -70,7 +71,7 @@ func getMetricsClient(config *rest.Config) (*metrics.Clientset, error) {
 	return metrics.NewForConfig(config)
 }
 
-func GetNodesResources(m *metrics.Clientset, ctx context.Context) ([]v1.ResourceList, error) {
+func GetNodesResources(m *metrics.Clientset, ctx context.Context) (*[]v1.ResourceList, error) {
 	nodeList, err := m.MetricsV1beta1().NodeMetricses().List(ctx, metav1.ListOptions{})
 
 	if err != nil {
@@ -80,10 +81,11 @@ func GetNodesResources(m *metrics.Clientset, ctx context.Context) ([]v1.Resource
 	resources := make([]v1.ResourceList, len(nodeList.Items))
 
 	for _, node := range nodeList.Items {
+		log.Printf("Node resource: %+v", node.Usage)
 		resources = append(resources, node.Usage)
 	}
 
-	return resources, nil
+	return &resources, nil
 }
 
 func OffloadTask(c *kubernetes.Clientset, task models.Task) error {
