@@ -7,7 +7,7 @@
             "image": {
                 "registry": "127.0.0.0:5000",
                 "name": "mec-xapp",
-                "tag": "0.0.20"
+                "tag": "0.0.28"
             }
         }
     ],
@@ -70,7 +70,7 @@
             "waitForSdl": true
     },
     "offload": {
-      "threshold": 85,
+      "threshold": 3,
       "repository": "hub.docker.com",
       "namespace": "mec"
     }

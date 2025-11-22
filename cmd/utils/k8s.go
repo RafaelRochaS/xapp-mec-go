@@ -8,6 +8,7 @@ import (
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"github.com/RafaelRochaS/xapp-mec-go/cmd/models"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -82,15 +83,19 @@ func GetNodesResources(m *metrics.Clientset, ctx context.Context) (*[]v1.Resourc
 
 	resources := make([]v1.ResourceList, len(nodeList.Items))
 
-	for _, node := range nodeList.Items {
+	for i, node := range nodeList.Items {
 		log.Printf("Node resource: %+v", node.Usage)
-		resources = append(resources, node.Usage)
+		resources[i] = node.Usage
 	}
+
+	log.Printf("Got resources: %+v", resources)
 
 	return &resources, nil
 }
 
 func OffloadTask(c *kubernetes.Clientset, task models.Task, ctx context.Context) error {
+	var ttlSecondsAfterFinished int32 = 5
+
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: task.Id,
@@ -128,12 +133,24 @@ func OffloadTask(c *kubernetes.Clientset, task models.Task, ctx context.Context)
 					},
 				},
 			},
+			RestartPolicy: v1.RestartPolicyOnFailure,
+		},
+	}
+
+	jobsClient := c.BatchV1().Jobs("task-offload")
+	job := &batchv1.Job{
+		ObjectMeta: pod.ObjectMeta,
+		Spec: batchv1.JobSpec{
+			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
+			Template: v1.PodTemplateSpec{
+				Spec: pod.Spec,
+			},
 		},
 	}
 
 	log.Println("Offloading task: ", task.Id)
 
-	_, err := c.CoreV1().Pods("task-offload").Create(ctx, pod, metav1.CreateOptions{})
+	_, err := jobsClient.Create(context.TODO(), job, metav1.CreateOptions{})
 
 	return err
 }

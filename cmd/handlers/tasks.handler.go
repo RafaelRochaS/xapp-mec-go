@@ -156,6 +156,7 @@ func (t *TaskHandler) StartTask(w http.ResponseWriter, r *http.Request) {
 	err = HandleOffload(t.edgeClient, t.cloudClient, parsedTask)
 
 	if err != nil {
+		xapp.Logger.Error("Failed to offload task: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte("Failed to start task:"))
 		_, _ = w.Write([]byte(err.Error()))
