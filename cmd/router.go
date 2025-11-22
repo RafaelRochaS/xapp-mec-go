@@ -9,7 +9,7 @@ func RegisterRoutes() {
 	t := handlers.NewTaskHandler()
 
 	xapp.Resource.InjectRoute("/ric/v1/mec/start", t.StartTask, "POST")
-	xapp.Resource.InjectRoute("/ric/v1/mec/jobs", t.RegisterTask, "POST")
-	xapp.Resource.InjectRoute("/ric/v1/mec/jobs/{jobId}", t.RetrieveTask, "GET")
-	xapp.Resource.InjectRoute("/ric/v1/mec/jobs/{jobId}", t.DeleteTask, "DELETE")
+	xapp.Resource.InjectRoute("/ric/v1/mec/tasks", t.RegisterTask, "POST")
+	xapp.Resource.InjectRoute("/ric/v1/mec/tasks/{taskId}", t.RetrieveTask, "GET")
+	xapp.Resource.InjectRoute("/ric/v1/mec/tasks/{taskId}", t.DeleteTask, "DELETE")
 }

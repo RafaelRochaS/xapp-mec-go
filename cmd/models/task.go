@@ -34,3 +34,7 @@ type StartTaskRequest struct {
 	Id       string `json:"id"`
 	DeviceId string `json:"deviceId"`
 }
+
+type RegisterTaskResponse struct {
+	Id string `json:"id"`
+}

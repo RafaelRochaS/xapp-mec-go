@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
 	"github.com/RafaelRochaS/xapp-mec-go/cmd/models"
@@ -101,16 +102,38 @@ func OffloadTask(c *kubernetes.Clientset, task models.Task, ctx context.Context)
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
 				{
-					Name:  fmt.Sprintf("Offload: %s-%s", task.DeviceId, task.Id),
-					Image: fmt.Sprintf("%s/%s", xapp.Config.GetString("offload.repository"), task.Image),
+					Name:  fmt.Sprintf("task-container-%s", task.Id),
+					Image: task.Image,
+					Env: []v1.EnvVar{
+						{
+							Name:  "WORKLOAD_SIZE",
+							Value: strconv.Itoa(task.Workload),
+						},
+						{
+							Name:  "DEVICE_ID",
+							Value: task.DeviceId,
+						},
+						{
+							Name:  "EXECUTION_SITE",
+							Value: "cloud",
+						},
+						{
+							Name:  "TASK_ID",
+							Value: task.Id,
+						},
+						{
+							Name:  "CALLBACK_ADDR",
+							Value: task.CallbackUrl,
+						},
+					},
 				},
 			},
 		},
 	}
 
-	xapp.Logger.Info("Offloading task: ", task.Id)
+	log.Println("Offloading task: ", task.Id)
 
-	_, err := c.CoreV1().Pods(xapp.Config.GetString("offload.namespace")).Create(ctx, pod, metav1.CreateOptions{})
+	_, err := c.CoreV1().Pods("task-offload").Create(ctx, pod, metav1.CreateOptions{})
 
 	return err
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -55,9 +54,9 @@ func (t *TaskHandler) RegisterTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jobId := uuid.New().String()
+	taskId := uuid.New().String()
 	task := models.Task{
-		Id:              jobId,
+		Id:              taskId,
 		RegisterRequest: taskRequest,
 	}
 
@@ -71,7 +70,7 @@ func (t *TaskHandler) RegisterTask(w http.ResponseWriter, r *http.Request) {
 
 	xapp.Logger.Debug("Serialized task: %s", string(serializedTask))
 
-	err = t.sdlClient.Store(utils.TaskNamespace, jobId, string(serializedTask))
+	err = t.sdlClient.Store(utils.TaskNamespace, taskId, string(serializedTask))
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -81,10 +80,14 @@ func (t *TaskHandler) RegisterTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	registered := fmt.Sprintf("{ jobId: %s }", jobId)
+	output := models.RegisterTaskResponse{
+		Id: taskId,
+	}
+
+	parsed, err := json.Marshal(output)
 
 	w.WriteHeader(http.StatusCreated)
-	_, _ = w.Write([]byte(registered))
+	_, _ = w.Write(parsed)
 
 	return
 }
@@ -94,15 +97,15 @@ func (t *TaskHandler) RetrieveTask(w http.ResponseWriter, r *http.Request) {
 	xapp.Logger.Debug("Request body: %s", r.Body)
 
 	path := strings.Split(r.URL.Path, "/")
-	jobId := path[len(path)-1]
+	taskId := path[len(path)-1]
 
-	if jobId == "" {
+	if taskId == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("Missing jobId parameter"))
+		_, _ = w.Write([]byte("Missing taskId parameter"))
 		return
 	}
 
-	task, err := t.retrieveTask(jobId)
+	task, err := t.retrieveTask(taskId)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
