@@ -1,7 +1,7 @@
 package models
 
 type RegisterRequest struct {
-	DeviceId     string `json:"deviceId"`
+	DeviceId     int    `json:"deviceId"`
 	Task         string `json:"task"`
 	Image        string `json:"image"`
 	CPU          string `json:"cpu"`

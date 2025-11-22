@@ -96,7 +96,7 @@ func OffloadTask(c *kubernetes.Clientset, task models.Task, ctx context.Context)
 			Name: task.Id,
 			Labels: map[string]string{
 				"offload":  "true",
-				"deviceId": task.DeviceId,
+				"deviceId": strconv.Itoa(task.DeviceId),
 			},
 		},
 		Spec: v1.PodSpec{
@@ -111,11 +111,11 @@ func OffloadTask(c *kubernetes.Clientset, task models.Task, ctx context.Context)
 						},
 						{
 							Name:  "DEVICE_ID",
-							Value: task.DeviceId,
+							Value: strconv.Itoa(task.DeviceId),
 						},
 						{
 							Name:  "EXECUTION_SITE",
-							Value: "cloud",
+							Value: ctx.Value("executionSite").(string),
 						},
 						{
 							Name:  "TASK_ID",

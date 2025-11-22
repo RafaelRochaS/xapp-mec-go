@@ -32,7 +32,7 @@ type Task struct {
 
 type StartTaskRequest struct {
 	Id       string `json:"id"`
-	DeviceId string `json:"deviceId"`
+	DeviceId int    `json:"deviceId"`
 }
 
 type RegisterTaskResponse struct {

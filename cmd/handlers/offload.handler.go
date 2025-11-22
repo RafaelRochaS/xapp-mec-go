@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func HandleOffload(edgeClient, cloudClient *utils.K8sClient, task models.Task, ctx context.Context) error {
+func HandleOffload(edgeClient, cloudClient *utils.K8sClient, task models.Task) error {
 	xapp.Logger.Info("Handling offload request")
 
 	offloadThreshold := xapp.Config.GetInt("offload.threshold")
@@ -25,11 +25,14 @@ func HandleOffload(edgeClient, cloudClient *utils.K8sClient, task models.Task, c
 
 		if int(cpuValue) < offloadThreshold {
 			xapp.Logger.Info("HandleOffload :: edge server resources within threshold, offloading resource")
+			ctx := context.WithValue(context.Background(), "executionSite", utils.EdgeExecutionSite)
+
 			return utils.OffloadTask(edgeClient.ClientSet, task, ctx)
 		}
 	}
 
 	xapp.Logger.Info("HandleOffload :: edge server resources above threshold, offloading to cloud")
 
+	ctx := context.WithValue(context.Background(), "executionSite", utils.CloudExecutionSite)
 	return utils.OffloadTask(cloudClient.ClientSet, task, ctx)
 }
