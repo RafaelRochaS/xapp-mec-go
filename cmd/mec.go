@@ -26,7 +26,7 @@ func main() {
 
 func (e *MECApp) Run() {
 
-	xapp.Logger.SetMdc("MECApp", "0.0.4")
+	xapp.Logger.SetMdc("MECApp", "0.1.0")
 	xapp.AddConfigChangeListener(e.ConfigChangeHandler)
 	xapp.SetReadyCB(e.xAppStartCB, true)
 	waitForSdl := xapp.Config.GetBool("db.waitForSdl")

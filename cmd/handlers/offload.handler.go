@@ -10,8 +10,7 @@ import (
 func HandleOffload(edgeClient, cloudClient *utils.K8sClient, task models.Task) error {
 	xapp.Logger.Info("Handling offload request")
 
-	//offloadThreshold := xapp.Config.GetInt("offload.threshold")
-	offloadThreshold := -1
+	offloadThreshold := xapp.Config.GetInt("offload.threshold")
 	xapp.Logger.Debug("HandleOffload :: threshold: ", offloadThreshold)
 
 	edgeMetrics, err := utils.GetNodesResources(edgeClient.Metrics, context.TODO())
