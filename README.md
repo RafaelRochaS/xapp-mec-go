@@ -26,6 +26,10 @@ the ```config/``` directory, and will automatically be picked up by the xApp.
 
 At present, only CPU load is taken into consideration for offloading. The parameter can be set on the ```config/config-file.json```, on ```offload.threshold``` field.
 
+The tasks are offloaded to the ```task-offload``` namespace, which must be created manually, both in the local and remote clusters.
+Additionally, the xApp requires specific permissions to be able to read the metrics of the local cluster and to create jobs in both clusters.
+For convenience, the provided cluster roles and bindings in the ```config\``` directory can be used.
+
 ### Tasks
 Tasks are represented by the ```Task``` struct, which contains the following fields:
 ```
