@@ -165,6 +165,10 @@ func (t *TaskHandler) StartTask(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("Task started"))
+
+	err = t.sdlClient.Delete(utils.TaskNamespace, []string{parsedTask.Id})
+
+	xapp.Logger.Debug("Deleted task from sdl storage: %v", err)
 }
 
 func (t *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
