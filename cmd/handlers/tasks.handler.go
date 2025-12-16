@@ -3,7 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/xapp-frame/pkg/xapp"
@@ -79,11 +81,15 @@ func (t *TaskHandler) RegisterTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err = t.recordTask(&task); err != nil {
+		xapp.Logger.Error("Failed to record task: %v", err)
+	}
+
 	output := models.RegisterTaskResponse{
 		Id: taskId,
 	}
 
-	parsed, err := json.Marshal(output)
+	parsed, _ := json.Marshal(output)
 
 	w.WriteHeader(http.StatusCreated)
 	_, _ = w.Write(parsed)
@@ -237,4 +243,36 @@ func (t *TaskHandler) retrieveTask(id string) (models.Task, error) {
 	}
 
 	return parsedTask, nil
+}
+
+func (t *TaskHandler) recordTask(task *models.Task) error {
+	deviceId := strconv.Itoa(task.DeviceId)
+
+	val, err := t.sdlClient.Read(utils.RegisterNamespace, deviceId)
+
+	xapp.Logger.Debug(fmt.Sprintf("Got value: %+v", val))
+
+	var taskRecords []models.Task
+
+	records, ok := val[deviceId].(string)
+
+	if records != "" && ok {
+		err = json.Unmarshal([]byte(records), &taskRecords)
+
+		if err != nil {
+			return err
+		}
+
+		xapp.Logger.Debug(fmt.Sprintf("Unmarshalled task records: %+v", taskRecords))
+	}
+
+	taskRecords = append(taskRecords, *task)
+
+	serializedTaskRecords, err := json.Marshal(taskRecords)
+
+	if err != nil {
+		return err
+	}
+
+	return t.sdlClient.Store(utils.RegisterNamespace, deviceId, string(serializedTaskRecords))
 }
